@@ -26,8 +26,22 @@ if (!envLoaded) {
 }
 
 import "./module-alias-setup";
-import { MashServer } from "./src";
-import { console$, logger } from "./src/utils/console";
+
+const resolveBackendEntry = () => {
+  const candidates = [
+    path.resolve(__dirname, "src"),
+    path.resolve(__dirname, "dist", "src"),
+    path.resolve(__dirname, "..", "dist", "src"),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  throw new Error(`Backend source not found. Tried: ${candidates.join(", ")}`);
+};
+
+const backendEntry = resolveBackendEntry();
+const { MashServer } = require(backendEntry);
+const { console$, logger } = require(path.join(backendEntry, "utils", "console"));
 
 const port = process.env.NEXT_PUBLIC_BACKEND_PORT || 4000;
 

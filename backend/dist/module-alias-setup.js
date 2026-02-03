@@ -1,1 +1,29 @@
-"use strict";var __importDefault=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(exports,"__esModule",{value:!0});require("module-alias/register");const path_1=__importDefault(require("path")),isProduction="production"===process.env.NODE_ENV,aliases={"@b":path_1.default.resolve(__dirname,"src"),"@db":path_1.default.resolve(__dirname,"models")};for(const e in aliases)require("module-alias").addAlias(e,aliases[e]);
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+require("module-alias/register");
+const path_1 = require("path");
+const fs_1 = require("fs");
+
+const resolveExistingPath = (candidates) => {
+  for (const candidate of candidates) {
+    if ((0, fs_1.existsSync)(candidate)) return candidate;
+  }
+  return candidates[0];
+};
+
+const aliases = {
+  "@b": resolveExistingPath([
+    (0, path_1.resolve)(__dirname, "src"),
+    (0, path_1.resolve)(__dirname, "dist", "src"),
+    (0, path_1.resolve)(__dirname, "..", "dist", "src"),
+  ]),
+  "@db": resolveExistingPath([
+    (0, path_1.resolve)(__dirname, "models"),
+    (0, path_1.resolve)(__dirname, "dist", "models"),
+    (0, path_1.resolve)(__dirname, "..", "dist", "models"),
+  ]),
+};
+
+for (const alias in aliases) {
+  require("module-alias").addAlias(alias, aliases[alias]);
+}

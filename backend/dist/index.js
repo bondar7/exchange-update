@@ -1,1 +1,58 @@
-"use strict";var __importDefault=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(exports,"__esModule",{value:!0});const path_1=__importDefault(require("path")),fs_1=__importDefault(require("fs")),envPaths=[path_1.default.resolve(process.cwd(),".env"),path_1.default.resolve(__dirname,"../.env"),path_1.default.resolve(__dirname,".env"),path_1.default.resolve(process.cwd(),"../.env")];let envLoaded=!1;for(const e of envPaths)if(fs_1.default.existsSync(e)){require("dotenv").config({path:e});envLoaded=!0;break}envLoaded||require("dotenv").config();require("./module-alias-setup");const src_1=require("./src"),console_1=require("./src/utils/console"),port=process.env.NEXT_PUBLIC_BACKEND_PORT||4e3,startApp=async()=>{try{const e=new src_1.MashServer;await e.startServer(Number(port))}catch(e){console_1.console$.error("Failed to start server",e);console_1.logger.error("APP","Failed to initialize app",e);process.exit(1)}};startApp();
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+
+const path_1 = require("path");
+const fs_1 = require("fs");
+
+const envPaths = [
+  (0, path_1.resolve)(process.cwd(), ".env"),
+  (0, path_1.resolve)(__dirname, "../.env"),
+  (0, path_1.resolve)(__dirname, ".env"),
+  (0, path_1.resolve)(process.cwd(), "../.env"),
+];
+
+let envLoaded = false;
+for (const envPath of envPaths) {
+  if ((0, fs_1.existsSync)(envPath)) {
+    require("dotenv").config({ path: envPath });
+    envLoaded = true;
+    break;
+  }
+}
+
+if (!envLoaded) {
+  require("dotenv").config();
+}
+
+require("./module-alias-setup");
+
+const resolveBackendEntry = () => {
+  const candidates = [
+    (0, path_1.resolve)(__dirname, "src"),
+    (0, path_1.resolve)(__dirname, "dist", "src"),
+    (0, path_1.resolve)(__dirname, "..", "dist", "src"),
+  ];
+  for (const candidate of candidates) {
+    if ((0, fs_1.existsSync)(candidate)) return candidate;
+  }
+  throw new Error(`Backend source not found. Tried: ${candidates.join(", ")}`);
+};
+
+const backendEntry = resolveBackendEntry();
+const { MashServer } = require(backendEntry);
+const { console$, logger } = require((0, path_1.join)(backendEntry, "utils", "console"));
+
+const port = process.env.NEXT_PUBLIC_BACKEND_PORT || 4000;
+
+const startApp = async () => {
+  try {
+    const app = new MashServer();
+    await app.startServer(Number(port));
+  } catch (error) {
+    console$.error("Failed to start server", error);
+    logger.error("APP", "Failed to initialize app", error);
+    process.exit(1);
+  }
+};
+
+startApp();

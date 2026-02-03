@@ -1,23 +1,27 @@
 import "module-alias/register";
 import path from "path";
+import fs from "fs";
 
-const isProduction = process.env.NODE_ENV === "production";
+const resolveExistingPath = (candidates: string[]) => {
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return candidates[0];
+};
 
-// If this file is in `backend/` during development and compiled into `dist/backend/` in production:
-const aliases = isProduction
-  ? {
-      // In production, code is compiled to `dist/src`,
-      // so @b should point to `dist/src` and @db to `dist/models`.
-      "@b": path.resolve(__dirname, "src"),
-      "@db": path.resolve(__dirname, "models"),
-    }
-  : {
-      // In development, `module-alias-setup.ts` is in `backend`.
-      // `@b` points to `backend/src`.
-      "@b": path.resolve(__dirname, "src"),
-      // `@db` points to `models` which is one level up from `backend`.
-      "@db": path.resolve(__dirname, "models"),
-    };
+// Support both source tree (backend/src) and dist-only builds (backend/dist/src).
+const aliases = {
+  "@b": resolveExistingPath([
+    path.resolve(__dirname, "src"),
+    path.resolve(__dirname, "dist", "src"),
+    path.resolve(__dirname, "..", "dist", "src"),
+  ]),
+  "@db": resolveExistingPath([
+    path.resolve(__dirname, "models"),
+    path.resolve(__dirname, "dist", "models"),
+    path.resolve(__dirname, "..", "dist", "models"),
+  ]),
+};
 
 for (const alias in aliases) {
   require("module-alias").addAlias(alias, aliases[alias]);
